@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Tic-Tac-Toe</title>
+  <style>
+    :root{
+      --bg1:#fff7fc;
+      --bg2:#f4efff;
+      --text:#51425a;
+      --muted:#7f7287;
+      --panel:#ffffff;
+      --line:#e9ddf2;
+      --button:#f7f1ff;
+      --button-hover:#efe4ff;
+      --board:#7c57ff;
+      --pink:#ff5ca8;
+      --purple:#8a49ff;
+      --blue:#4d7dff;
+      --green:#2dbb63;
+      --gold:#ffe98e;
+      --gold-border:#f0cf4e;
+      --shadow:0 14px 38px rgba(126, 96, 162, 0.14);
+      --active-bg:#fff9db;
+      --active-border:#e8cb54;
+      --win-bg:#fff7c7;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, #ffe2f1 0%, transparent 28%),
+        radial-gradient(circle at top right, #e7dcff 0%, transparent 30%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .app{
+      width:min(100%, 600px);
+      background:rgba(255,255,255,0.95);
+      border:1px solid rgba(255,255,255,0.9);
+      border-radius:30px;
+      padding:22px 16px 18px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(8px);
+    }
+
+    h1{
+      margin:0;
+      text-align:center;
+      font-size:clamp(28px, 5vw, 40px);
+      line-height:1.08;
+    }
+
+    .subtitle{
+      margin:8px 0 16px;
+      text-align:center;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .first-banner{
+      display:none;
+      margin:0 0 10px;
+      padding:10px 12px;
+      border-radius:16px;
+      font-weight:900;
+      font-size:16px;
+      background:linear-gradient(180deg, #fff7cf, var(--gold));
+      border:2px solid var(--gold-border);
+      box-shadow:0 8px 18px rgba(233, 199, 66, 0.16);
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-align:center;
+    }
+
+    .first-banner .icon-box{
+      width:28px;
+      height:28px;
+      flex:0 0 28px;
+    }
+
+    .status{
+      display:none;
+      margin:0 0 14px;
+      min-height:54px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:#fbf8ff;
+      border:1px solid var(--line);
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-align:center;
+      font-size:17px;
+      font-weight:800;
+      flex-wrap:wrap;
+    }
+
+    .chooser{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+      margin-bottom:14px;
+    }
+
+    .chooser-title{
+      text-align:center;
+      font-size:16px;
+      font-weight:900;
+      margin-bottom:12px;
+    }
+
+    .icon-grid{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:10px;
+    }
+
+    button{
+      appearance:none;
+      border:none;
+      font:inherit;
+      cursor:pointer;
+      transition:transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    button:hover{ transform:translateY(-1px); }
+    button:active{ transform:scale(0.985); }
+
+    .icon-btn{
+      background:var(--button);
+      color:var(--text);
+      border-radius:18px;
+      padding:12px 10px;
+      font-size:16px;
+      font-weight:900;
+      box-shadow:0 6px 18px rgba(135,109,167,0.10);
+      text-align:center;
+    }
+
+    .icon-btn .icon-box{
+      width:46px;
+      height:46px;
+      margin:0 auto 8px;
+    }
+
+    .players{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .player-card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:16px;
+      min-height:78px;
+      padding:10px 8px;
+      text-align:center;
+      transition:border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .player-card.active{
+      border-color:var(--active-border);
+      background:linear-gradient(180deg, #fffdf0, var(--active-bg));
+      box-shadow:0 8px 20px rgba(232,203,84,0.16);
+    }
+
+    .player-label{
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:4px;
+    }
+
+    .player-choice{
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      font-weight:800;
+      font-size:13px;
+      line-height:1.15;
+    }
+
+    .player-choice .icon-box{
+      width:24px;
+      height:24px;
+    }
+
+    .board-wrap{
+      width:min(100%, 360px);
+      aspect-ratio:1 / 1;
+      margin:8px auto 14px;
+      padding:10px;
+      border-radius:20px;
+      background:#ffffff;
+      border:1px solid var(--line);
+      box-shadow:0 8px 20px rgba(126,96,162,0.08);
+    }
+
+    .board{
+      width:100%;
+      height:100%;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      grid-template-rows:repeat(3, minmax(0, 1fr));
+      background:#fff;
+    }
+
+    .cell{
+      min-width:0;
+      min-height:0;
+      background:#ffffff;
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      border-radius:0;
+      overflow:hidden;
+    }
+
+    .cell .icon-box{
+      width:46%;
+      height:46%;
+    }
+
+    .cell.locked{
+      cursor:not-allowed;
+    }
+
+    .cell.win{
+      background:var(--win-bg);
+    }
+
+    .cell:nth-child(1),
+    .cell:nth-child(2),
+    .cell:nth-child(4),
+    .cell:nth-child(5),
+    .cell:nth-child(7),
+    .cell:nth-child(8){
+      border-right:6px solid var(--board);
+    }
+
+    .cell:nth-child(1),
+    .cell:nth-child(2),
+    .cell:nth-child(3),
+    .cell:nth-child(4),
+    .cell:nth-child(5),
+    .cell:nth-child(6){
+      border-bottom:6px solid var(--board);
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .secondary-btn{
+      background:var(--button);
+      color:var(--text);
+      border-radius:16px;
+      padding:14px 12px;
+      font-size:15px;
+      font-weight:900;
+      box-shadow:0 6px 18px rgba(135,109,167,0.10);
+    }
+
+    .secondary-btn:hover{
+      background:var(--button-hover);
+    }
+
+    .legend{
+      margin-top:14px;
+      text-align:center;
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .icon-box svg{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
+    @media (max-width:440px){
+      .controls{
+        grid-template-columns:1fr;
+      }
+      .board-wrap{
+        width:min(100%, 330px);
+        padding:8px;
+      }
+      .cell:nth-child(1),
+      .cell:nth-child(2),
+      .cell:nth-child(4),
+      .cell:nth-child(5),
+      .cell:nth-child(7),
+      .cell:nth-child(8){
+        border-right-width:5px;
+      }
+      .cell:nth-child(1),
+      .cell:nth-child(2),
+      .cell:nth-child(3),
+      .cell:nth-child(4),
+      .cell:nth-child(5),
+      .cell:nth-child(6){
+        border-bottom-width:5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Tic-Tac-Toe</h1>
+    
+    <div class="first-banner" id="firstBanner"></div>
+    <div class="status" id="status" style="display:none;">Player 1, choose your icon.</div>
+
+    <div class="chooser" id="chooser">
+      <div class="chooser-title" id="chooserTitle">Player 1: choose your icon</div>
+      <div class="icon-grid" id="iconGrid"></div>
+    </div>
+
+    <div class="players">
+      <div class="player-card" id="player1Card">
+        <div class="player-label">Player 1</div>
+        <div class="player-choice" id="player1Choice">—</div>
+      </div>
+      <div class="player-card" id="player2Card">
+        <div class="player-label">Player 2</div>
+        <div class="player-choice" id="player2Choice">—</div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board" aria-label="Tic-tac-toe board">
+        <button class="cell locked" data-index="0" aria-label="Cell 1"></button>
+        <button class="cell locked" data-index="1" aria-label="Cell 2"></button>
+        <button class="cell locked" data-index="2" aria-label="Cell 3"></button>
+        <button class="cell locked" data-index="3" aria-label="Cell 4"></button>
+        <button class="cell locked" data-index="4" aria-label="Cell 5"></button>
+        <button class="cell locked" data-index="5" aria-label="Cell 6"></button>
+        <button class="cell locked" data-index="6" aria-label="Cell 7"></button>
+        <button class="cell locked" data-index="7" aria-label="Cell 8"></button>
+        <button class="cell locked" data-index="8" aria-label="Cell 9"></button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="secondary-btn" id="restartBtn" type="button">Restart game</button>
+      <button class="secondary-btn" id="newIconsBtn" type="button">Pick new icons</button>
+    </div>
+
+    <div class="legend">Icons: pink heart, purple crown, blue star, green frog</div>
+  </div>
+
+  <script>
+    const ICONS = [
+      {
+        id: 'heart',
+        name: 'Pink Heart',
+        render: () => `
+          <div class="icon-box" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <path fill="#ff5ca8" d="M32 56C20 47.2 8 37.6 8 24.4 8 16.7 14.1 11 21.5 11c4.5 0 8.5 2.1 10.5 5.6C34 13.1 38 11 42.5 11 49.9 11 56 16.7 56 24.4 56 37.6 44 47.2 32 56z"/>
+            </svg>
+          </div>
+        `
+      },
+      {
+        id: 'crown',
+        name: 'Purple Crown',
+        render: () => `
+          <div class="icon-box" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <circle cx="11" cy="18" r="5" fill="#8a49ff"/>
+              <circle cx="32" cy="11" r="5" fill="#8a49ff"/>
+              <circle cx="53" cy="18" r="5" fill="#8a49ff"/>
+              <path fill="#8a49ff" d="M10 21l9 10 13-15 13 15 9-10 4 27H6l4-27z"/>
+              <rect x="10" y="48" width="44" height="8" rx="3" fill="#8a49ff"/>
+            </svg>
+          </div>
+        `
+      },
+      {
+        id: 'star',
+        name: 'Blue Star',
+        render: () => `
+          <div class="icon-box" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <path fill="#4d7dff" d="M32 8l6.9 14 15.5 2.2-11.2 10.9 2.7 15.4L32 43.1 18.1 50.5l2.7-15.4L9.6 24.2 25.1 22 32 8z"/>
+            </svg>
+          </div>
+        `
+      },
+      {
+        id: 'frog',
+        name: 'Green Frog',
+        render: () => `
+          <div class="icon-box" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <circle cx="21" cy="16" r="9" fill="#2dbb63"/>
+              <circle cx="43" cy="16" r="9" fill="#2dbb63"/>
+              <circle cx="21" cy="16" r="4.2" fill="#ffffff"/>
+              <circle cx="43" cy="16" r="4.2" fill="#ffffff"/>
+              <circle cx="21" cy="16" r="1.8" fill="#233125"/>
+              <circle cx="43" cy="16" r="1.8" fill="#233125"/>
+              <rect x="11" y="18" width="42" height="28" rx="14" fill="#2dbb63"/>
+              <ellipse cx="22" cy="35" rx="4" ry="3" fill="#dff7e7"/>
+              <ellipse cx="42" cy="35" rx="4" ry="3" fill="#dff7e7"/>
+              <path d="M22 41c2.8 2.2 6 3.2 10 3.2s7.2-1 10-3.2" fill="none" stroke="#233125" stroke-width="2.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+        `
+      }
+    ];
+
+    const WIN_LINES = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    const statusEl = document.getElementById('status');
+    const chooserEl = document.getElementById('chooser');
+    const chooserTitleEl = document.getElementById('chooserTitle');
+    const iconGridEl = document.getElementById('iconGrid');
+    const firstBannerEl = document.getElementById('firstBanner');
+    const player1ChoiceEl = document.getElementById('player1Choice');
+    const player2ChoiceEl = document.getElementById('player2Choice');
+    const player1CardEl = document.getElementById('player1Card');
+    const player2CardEl = document.getElementById('player2Card');
+    const restartBtn = document.getElementById('restartBtn');
+    const newIconsBtn = document.getElementById('newIconsBtn');
+    const cells = Array.from(document.querySelectorAll('.cell'));
+
+    let phase = 'pick1';
+    let playerIcons = { 1: null, 2: null };
+    let currentPlayer = 1;
+    let board = Array(9).fill('');
+    let gameOver = false;
+
+    function setStatus(html) {
+      statusEl.innerHTML = html;
+      const picking = phase === 'pick1' || phase === 'pick2';
+      statusEl.style.display = picking ? 'none' : 'flex';
+    }
+
+    function getIconById(id) {
+      return ICONS.find(icon => icon.id === id) || null;
+    }
+
+    function iconMarkup(iconId) {
+      const icon = getIconById(iconId);
+      return icon ? icon.render() : '';
+    }
+
+    function playerLabel(playerNumber) {
+      return `Player ${playerNumber}`;
+    }
+
+    function updatePlayerCards() {
+      player1ChoiceEl.innerHTML = playerIcons[1]
+        ? `${iconMarkup(playerIcons[1])}<div>${getIconById(playerIcons[1]).name}</div>`
+        : '—';
+
+      player2ChoiceEl.innerHTML = playerIcons[2]
+        ? `${iconMarkup(playerIcons[2])}<div>${getIconById(playerIcons[2]).name}</div>`
+        : '—';
+    }
+
+    function updateActivePlayerUI() {
+      player1CardEl.classList.toggle('active', phase === 'play' && currentPlayer === 1 && !gameOver);
+      player2CardEl.classList.toggle('active', phase === 'play' && currentPlayer === 2 && !gameOver);
+    }
+
+    function updateFirstBanner() {
+      if (playerIcons[1] && playerIcons[2] && phase === 'play') {
+        const icon = getIconById(playerIcons[1]);
+        firstBannerEl.style.display = 'block';
+        firstBannerEl.innerHTML = `${icon.render()} <span>Player 1 goes first</span>`;
+      } else {
+        firstBannerEl.style.display = 'none';
+        firstBannerEl.innerHTML = '';
+      }
+    }
+
+    function clearWinStyles() {
+      cells.forEach(cell => cell.classList.remove('win'));
+    }
+
+    function renderBoard() {
+      cells.forEach((cell, index) => {
+        const occupant = board[index];
+        cell.innerHTML = occupant ? iconMarkup(playerIcons[occupant]) : '';
+        cell.classList.toggle('locked', phase !== 'play' || gameOver || Boolean(occupant));
+      });
+      updateActivePlayerUI();
+    }
+
+    function availableIcons() {
+      const taken = new Set(Object.values(playerIcons).filter(Boolean));
+      return ICONS.filter(icon => !taken.has(icon.id));
+    }
+
+    function renderChooser() {
+      if (phase === 'play') {
+        chooserEl.style.display = 'none';
+        return;
+      }
+
+      chooserEl.style.display = 'block';
+      chooserTitleEl.textContent = phase === 'pick1'
+        ? 'Player 1: choose your icon'
+        : 'Player 2: choose your icon';
+
+      iconGridEl.innerHTML = '';
+      availableIcons().forEach(icon => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'icon-btn';
+        button.innerHTML = `${icon.render()}<div>${icon.name}</div>`;
+        button.addEventListener('click', () => chooseIcon(icon.id));
+        iconGridEl.appendChild(button);
+      });
+    }
+
+    function chooseIcon(iconId) {
+      if (phase === 'pick1') {
+        playerIcons[1] = iconId;
+        phase = 'pick2';
+        updatePlayerCards();
+        renderChooser();
+        setStatus('');
+        return;
+      }
+
+      if (phase === 'pick2') {
+        playerIcons[2] = iconId;
+        phase = 'play';
+        currentPlayer = 1;
+        board = Array(9).fill('');
+        gameOver = false;
+        clearWinStyles();
+        updatePlayerCards();
+        renderChooser();
+        updateFirstBanner();
+        renderBoard();
+        setStatus(`${iconMarkup(playerIcons[1])} <span>Player 1 starts</span>`);
+      }
+    }
+
+    function checkWinner() {
+      for (const line of WIN_LINES) {
+        const [a, b, c] = line;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          line.forEach(index => cells[index].classList.add('win'));
+          return board[a];
+        }
+      }
+      return '';
+    }
+
+    function boardIsFull() {
+      return board.every(value => value !== '');
+    }
+
+    function restartGame() {
+      if (!playerIcons[1] || !playerIcons[2]) {
+        setStatus(phase === 'pick1' ? 'Player 1, choose your icon.' : 'Player 2, choose your icon.');
+        return;
+      }
+
+      phase = 'play';
+      currentPlayer = 1;
+      board = Array(9).fill('');
+      gameOver = false;
+      clearWinStyles();
+      updateFirstBanner();
+      renderBoard();
+      setStatus(`${iconMarkup(playerIcons[1])} <span>Player 1 starts</span>`);
+    }
+
+    function pickNewIcons() {
+      phase = 'pick1';
+      playerIcons = { 1: null, 2: null };
+      currentPlayer = 1;
+      board = Array(9).fill('');
+      gameOver = false;
+      clearWinStyles();
+      firstBannerEl.style.display = 'none';
+      updatePlayerCards();
+      renderChooser();
+      renderBoard();
+      setStatus('');
+    }
+
+    cells.forEach(cell => {
+      cell.addEventListener('click', () => {
+        const index = Number(cell.dataset.index);
+
+        if (phase !== 'play' || gameOver || board[index]) return;
+
+        board[index] = currentPlayer;
+        renderBoard();
+
+        const winner = checkWinner();
+        if (winner) {
+          gameOver = true;
+          renderBoard();
+          setStatus(`${iconMarkup(playerIcons[winner])} <span>${playerLabel(winner)} wins!</span>`);
+          return;
+        }
+
+        if (boardIsFull()) {
+          gameOver = true;
+          renderBoard();
+          setStatus('It’s a tie!');
+          return;
+        }
+
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        renderBoard();
+        setStatus(`${iconMarkup(playerIcons[currentPlayer])} <span>${playerLabel(currentPlayer)}’s turn</span>`);
+      });
+    });
+
+    restartBtn.addEventListener('click', restartGame);
+    newIconsBtn.addEventListener('click', pickNewIcons);
+
+    updatePlayerCards();
+    renderChooser();
+    renderBoard();
+    setStatus('');
+  </script>
+</body>
+</html>

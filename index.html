@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Tic-Tac-Toe</title>
+  <style>
+    :root{
+      --bg1:#fff7fc;
+      --bg2:#f3eeff;
+      --panel:#ffffff;
+      --text:#54445c;
+      --muted:#84778d;
+      --line:#e6dcef;
+      --purple:#7d57ff;
+      --gold:#fff2b3;
+      --gold-border:#e7c94f;
+      --shadow:0 14px 34px rgba(126,96,162,0.12);
+      --board-size:min(82vw, 360px);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, #ffe2f1 0%, transparent 28%),
+        radial-gradient(circle at top right, #e5daff 0%, transparent 30%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .app{
+      width:min(100%, 560px);
+      background:rgba(255,255,255,0.95);
+      border:1px solid rgba(255,255,255,0.9);
+      border-radius:30px;
+      box-shadow:var(--shadow);
+      padding:18px 16px 18px;
+    }
+
+    h1{
+      margin:0 0 12px;
+      text-align:center;
+      font-size:clamp(28px, 6vw, 40px);
+      line-height:1.05;
+    }
+
+    .pick-panel,
+    .start-panel,
+    .info-bar,
+    .turn-bar,
+    .player-chip,
+    .board-wrap,
+    .controls button{
+      border:1px solid var(--line);
+      background:var(--panel);
+    }
+
+    .pick-panel,
+    .start-panel{
+      border-radius:18px;
+      padding:14px;
+      margin-bottom:12px;
+    }
+
+    .pick-title,
+    .start-title{
+      text-align:center;
+      font-size:16px;
+      font-weight:900;
+      margin:0 0 12px;
+    }
+
+    .icon-grid{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:10px;
+    }
+
+    .start-grid{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:10px;
+    }
+
+    .icon-btn,
+    .start-btn{
+      appearance:none;
+      border:none;
+      border-radius:18px;
+      background:#f8f3ff;
+      color:var(--text);
+      padding:12px 10px;
+      font:inherit;
+      font-weight:900;
+      box-shadow:0 6px 16px rgba(126,96,162,0.10);
+      cursor:pointer;
+    }
+
+    .icon-btn:active,
+    .start-btn:active,
+    .controls button:active{
+      transform:scale(0.985);
+    }
+
+    .info-bar{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-align:center;
+      border-radius:16px;
+      padding:10px 12px;
+      margin-bottom:10px;
+      background:linear-gradient(180deg, #fff8d4, var(--gold));
+      border:2px solid var(--gold-border);
+      font-size:16px;
+      font-weight:900;
+      flex-wrap:wrap;
+    }
+
+    .turn-bar{
+      display:none;
+      border-radius:16px;
+      padding:10px 12px;
+      margin-bottom:10px;
+      text-align:center;
+      font-size:16px;
+      font-weight:900;
+      min-height:48px;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .players{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .player-chip{
+      border-radius:16px;
+      min-height:64px;
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      transition:border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .player-chip.active{
+      background:#fffbe6;
+      border-color:var(--gold-border);
+      box-shadow:0 6px 16px rgba(231,201,79,0.16);
+    }
+
+    .player-chip-text{
+      min-width:0;
+    }
+
+    .player-name{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:800;
+      margin-bottom:2px;
+    }
+
+    .player-icon-name{
+      font-size:14px;
+      font-weight:900;
+      line-height:1.15;
+      word-break:break-word;
+    }
+
+    .board-wrap{
+      width:var(--board-size);
+      height:var(--board-size);
+      margin:0 auto 12px;
+      border-radius:22px;
+      padding:8px;
+      box-shadow:0 8px 20px rgba(126,96,162,0.08);
+    }
+
+    .board{
+      width:100%;
+      height:100%;
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      grid-template-rows:repeat(3, 1fr);
+      background:#fff;
+    }
+
+    .cell{
+      appearance:none;
+      border:none;
+      margin:0;
+      padding:0;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width:0;
+      min-height:0;
+      overflow:hidden;
+      cursor:pointer;
+    }
+
+    .cell:disabled{
+      cursor:default;
+    }
+
+    .cell.win{
+      background:#fff8c9;
+    }
+
+    .cell:nth-child(1),
+    .cell:nth-child(2),
+    .cell:nth-child(4),
+    .cell:nth-child(5),
+    .cell:nth-child(7),
+    .cell:nth-child(8){
+      border-right:6px solid var(--purple);
+    }
+
+    .cell:nth-child(1),
+    .cell:nth-child(2),
+    .cell:nth-child(3),
+    .cell:nth-child(4),
+    .cell:nth-child(5),
+    .cell:nth-child(6){
+      border-bottom:6px solid var(--purple);
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .controls button{
+      appearance:none;
+      border-radius:16px;
+      padding:14px 12px;
+      font:inherit;
+      font-size:15px;
+      font-weight:900;
+      color:var(--text);
+      background:#f8f3ff;
+      cursor:pointer;
+      box-shadow:0 6px 16px rgba(126,96,162,0.10);
+    }
+
+    .legend{
+      text-align:center;
+      color:var(--muted);
+      margin-top:12px;
+      font-size:14px;
+      line-height:1.4;
+    }
+
+    .icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      line-height:1;
+      font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+    }
+
+    .icon.sm{ width:20px; height:20px; font-size:18px; }
+    .icon.md{ width:30px; height:30px; font-size:26px; }
+    .icon.lg{ width:62%; height:62%; max-width:78px; max-height:78px; font-size:min(64px, 14vw); }
+
+    @media (max-width:440px){
+      .controls,
+      .start-grid{
+        grid-template-columns:1fr;
+      }
+      .icon-grid{
+        grid-template-columns:repeat(2, 1fr);
+      }
+      .player-chip{
+        min-height:60px;
+        padding:9px 10px;
+      }
+      .player-icon-name{
+        font-size:13px;
+      }
+      .cell:nth-child(1),
+      .cell:nth-child(2),
+      .cell:nth-child(4),
+      .cell:nth-child(5),
+      .cell:nth-child(7),
+      .cell:nth-child(8){
+        border-right-width:5px;
+      }
+      .cell:nth-child(1),
+      .cell:nth-child(2),
+      .cell:nth-child(3),
+      .cell:nth-child(4),
+      .cell:nth-child(5),
+      .cell:nth-child(6){
+        border-bottom-width:5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Tic-Tac-Toe</h1>
+
+    <div class="pick-panel" id="pickPanel">
+      <div class="pick-title" id="pickTitle">Player 1: choose your icon</div>
+      <div class="icon-grid" id="iconGrid"></div>
+    </div>
+
+    <div class="start-panel" id="startPanel" style="display:none;">
+      <div class="start-title">Choose who goes first</div>
+      <div class="start-grid">
+        <button class="start-btn" id="player1FirstBtn" type="button">Player 1 goes first</button>
+        <button class="start-btn" id="player2FirstBtn" type="button">Player 2 goes first</button>
+      </div>
+    </div>
+
+    <div class="info-bar" id="infoBar"></div>
+    <div class="turn-bar" id="turnBar"></div>
+
+    <div class="players">
+      <div class="player-chip" id="player1Chip">
+        <div class="icon sm" id="player1Mini"></div>
+        <div class="player-chip-text">
+          <div class="player-name">Player 1</div>
+          <div class="player-icon-name" id="player1Name">Not chosen</div>
+        </div>
+      </div>
+      <div class="player-chip" id="player2Chip">
+        <div class="icon sm" id="player2Mini"></div>
+        <div class="player-chip-text">
+          <div class="player-name">Player 2</div>
+          <div class="player-icon-name" id="player2Name">Not chosen</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board">
+        <button class="cell" data-index="0" aria-label="Cell 1"></button>
+        <button class="cell" data-index="1" aria-label="Cell 2"></button>
+        <button class="cell" data-index="2" aria-label="Cell 3"></button>
+        <button class="cell" data-index="3" aria-label="Cell 4"></button>
+        <button class="cell" data-index="4" aria-label="Cell 5"></button>
+        <button class="cell" data-index="5" aria-label="Cell 6"></button>
+        <button class="cell" data-index="6" aria-label="Cell 7"></button>
+        <button class="cell" data-index="7" aria-label="Cell 8"></button>
+        <button class="cell" data-index="8" aria-label="Cell 9"></button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="restartBtn" type="button">Restart game</button>
+      <button id="newIconsBtn" type="button">Pick new icons</button>
+    </div>
+
+    <div class="legend">❤️ 🦄 🏓 🚙 🚘 ⚾️ 🎳 ⛸️ 🀄️</div>
+  </div>
+
+  <script>
+    const ICONS = [
+      { id: 'heart', name: 'Heart', emoji: '❤️' },
+      { id: 'unicorn', name: 'Unicorn', emoji: '🦄' },
+      { id: 'pickleball', name: 'Pickleball', emoji: '🏓' },
+      { id: 'bluecar', name: 'Blue Car', emoji: '🚙' },
+      { id: 'redcar', name: 'Red Car', emoji: '🚘' },
+      { id: 'baseball', name: 'Baseball', emoji: '⚾️' },
+      { id: 'bowling', name: 'Bowling', emoji: '🎳' },
+      { id: 'skates', name: 'Ice Skates', emoji: '⛸️' },
+      { id: 'mahjong', name: 'Mahjong', emoji: '🀄️' }
+    ];
+
+    const WINS = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    const pickPanel = document.getElementById('pickPanel');
+    const pickTitle = document.getElementById('pickTitle');
+    const iconGrid = document.getElementById('iconGrid');
+    const startPanel = document.getElementById('startPanel');
+    const infoBar = document.getElementById('infoBar');
+    const turnBar = document.getElementById('turnBar');
+    const player1Chip = document.getElementById('player1Chip');
+    const player2Chip = document.getElementById('player2Chip');
+    const player1Mini = document.getElementById('player1Mini');
+    const player2Mini = document.getElementById('player2Mini');
+    const player1Name = document.getElementById('player1Name');
+    const player2Name = document.getElementById('player2Name');
+    const cells = Array.from(document.querySelectorAll('.cell'));
+    const restartBtn = document.getElementById('restartBtn');
+    const newIconsBtn = document.getElementById('newIconsBtn');
+    const player1FirstBtn = document.getElementById('player1FirstBtn');
+    const player2FirstBtn = document.getElementById('player2FirstBtn');
+
+    let phase = 'pick1';
+    let playerIcons = {1:'', 2:''};
+    let startingPlayer = 1;
+    let currentPlayer = 1;
+    let board = Array(9).fill(0);
+    let gameOver = false;
+
+    function iconById(id){
+      return ICONS.find(icon => icon.id === id) || null;
+    }
+
+    function renderIcon(id, sizeClass='sm'){
+      const icon = iconById(id);
+      return icon ? `<span class="icon ${sizeClass}">${icon.emoji}</span>` : '';
+    }
+
+    function availableIcons(){
+      const taken = new Set(Object.values(playerIcons).filter(Boolean));
+      return ICONS.filter(icon => !taken.has(icon.id));
+    }
+
+    function updatePickPanel(){
+      if (phase === 'play' || phase === 'chooseStarter'){
+        pickPanel.style.display = 'none';
+        return;
+      }
+
+      pickPanel.style.display = 'block';
+      pickTitle.textContent = phase === 'pick1'
+        ? 'Player 1: choose your icon'
+        : 'Player 2: choose your icon';
+
+      iconGrid.innerHTML = '';
+      availableIcons().forEach(icon => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'icon-btn';
+        btn.innerHTML = `${renderIcon(icon.id, 'md')}`;
+        btn.addEventListener('click', () => chooseIcon(icon.id));
+        iconGrid.appendChild(btn);
+      });
+    }
+
+    function updateStartPanel(){
+      startPanel.style.display = phase === 'chooseStarter' ? 'block' : 'none';
+    }
+
+    function updatePlayers(){
+      const p1 = iconById(playerIcons[1]);
+      const p2 = iconById(playerIcons[2]);
+
+      player1Mini.innerHTML = p1 ? renderIcon(p1.id, 'sm') : '';
+      player2Mini.innerHTML = p2 ? renderIcon(p2.id, 'sm') : '';
+
+      player1Name.textContent = p1 ? '' : 'Not chosen';
+      player2Name.textContent = p2 ? '' : 'Not chosen';
+
+      player1Chip.classList.toggle('active', phase === 'play' && !gameOver && currentPlayer === 1);
+      player2Chip.classList.toggle('active', phase === 'play' && !gameOver && currentPlayer === 2);
+    }
+
+    function updateInfo(){
+      if (phase !== 'play' || !playerIcons[1] || !playerIcons[2]){
+        infoBar.style.display = 'none';
+        turnBar.style.display = 'none';
+        return;
+      }
+
+      infoBar.style.display = 'flex';
+      infoBar.innerHTML = `${renderIcon(playerIcons[startingPlayer], 'sm')}<span>Player ${startingPlayer} goes first</span>`;
+
+      turnBar.style.display = 'flex';
+      if (gameOver) return;
+
+      turnBar.innerHTML = `${renderIcon(playerIcons[currentPlayer], 'sm')}<span>Player ${currentPlayer}'s turn</span>`;
+    }
+
+    function renderBoard(){
+      cells.forEach((cell, index) => {
+        const occupant = board[index];
+        cell.innerHTML = occupant ? renderIcon(playerIcons[occupant], 'lg') : '';
+        cell.disabled = phase !== 'play' || gameOver || occupant !== 0;
+      });
+    }
+
+    function clearWinStates(){
+      cells.forEach(cell => cell.classList.remove('win'));
+    }
+
+    function chooseIcon(iconId){
+      if (phase === 'pick1'){
+        playerIcons[1] = iconId;
+        phase = 'pick2';
+      } else if (phase === 'pick2'){
+        playerIcons[2] = iconId;
+        phase = 'chooseStarter';
+        board = Array(9).fill(0);
+        gameOver = false;
+        clearWinStates();
+      }
+      updatePickPanel();
+      updateStartPanel();
+      updatePlayers();
+      updateInfo();
+      renderBoard();
+    }
+
+    function startGame(playerNumber){
+      startingPlayer = playerNumber;
+      currentPlayer = playerNumber;
+      phase = 'play';
+      board = Array(9).fill(0);
+      gameOver = false;
+      clearWinStates();
+      updatePickPanel();
+      updateStartPanel();
+      updatePlayers();
+      updateInfo();
+      renderBoard();
+    }
+
+    function checkWinner(){
+      for (const combo of WINS){
+        const [a,b,c] = combo;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]){
+          combo.forEach(i => cells[i].classList.add('win'));
+          return board[a];
+        }
+      }
+      return 0;
+    }
+
+    function boardFull(){
+      return board.every(value => value !== 0);
+    }
+
+    function setTurnText(text){
+      turnBar.style.display = 'flex';
+      turnBar.innerHTML = text;
+    }
+
+    cells.forEach(cell => {
+      cell.addEventListener('click', () => {
+        const index = Number(cell.dataset.index);
+        if (phase !== 'play' || gameOver || board[index] !== 0) return;
+
+        board[index] = currentPlayer;
+        renderBoard();
+
+        const winner = checkWinner();
+        if (winner){
+          gameOver = true;
+          updatePlayers();
+          setTurnText(`${renderIcon(playerIcons[winner], 'sm')}<span>Player ${winner} wins!</span>`);
+          return;
+        }
+
+        if (boardFull()){
+          gameOver = true;
+          updatePlayers();
+          setTurnText(`It's a tie!`);
+          return;
+        }
+
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        updatePlayers();
+        updateInfo();
+        renderBoard();
+      });
+    });
+
+    player1FirstBtn.addEventListener('click', () => startGame(1));
+    player2FirstBtn.addEventListener('click', () => startGame(2));
+
+    restartBtn.addEventListener('click', () => {
+      if (!playerIcons[1] || !playerIcons[2]) return;
+      startGame(startingPlayer);
+    });
+
+    newIconsBtn.addEventListener('click', () => {
+      phase = 'pick1';
+      playerIcons = {1:'', 2:''};
+      startingPlayer = 1;
+      currentPlayer = 1;
+      board = Array(9).fill(0);
+      gameOver = false;
+      clearWinStates();
+      updatePickPanel();
+      updateStartPanel();
+      updatePlayers();
+      updateInfo();
+      renderBoard();
+    });
+
+    updatePickPanel();
+    updateStartPanel();
+    updatePlayers();
+    updateInfo();
+    renderBoard();
+  </script>
+</body>
+</html>
